@@ -25,7 +25,6 @@ const String badlist[2] = {"B6:A7:D8:G9:U0:Y1", "B5:A7:D2:G9:R1:L8"};
 const int numberOfBadGuys = 2;
 
 // variables will change:
-int buttonState = 0;                  // variable for reading the pushbutton status
 bool snooze = false;
 bool signalWarning = false;
 
@@ -78,37 +77,36 @@ void loop() {
         //if (signalWarning = false) {
 
         // Check if anything in array is also in badlist
+        signalWarning = false;
         for (int i = 0; i < numberOfBadGuys; i++) {
           // if any values of badlist are found in currentConnection,
           // then change a boolean to true
           if (currentConnections.indexOf(badlist[i]) != -1) {
             USE_SERIAL.println("found badguy in currentConnections");
             signalWarning = true;
-
-            blinkLight("on");
-
-            if (snooze == false) {
-              buzzer("on");
-            }
-
-            // read the state of the pushbutton value:
-            buttonState = digitalRead(buttonPin);
-            // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-            if (buttonState == HIGH) {
-              // turn off buzzer, turn off light:
-              buzzer("off");
-              blinkLight("off");
-              snooze = true;
-            }
-          } else {
-            buzzer("off");
-            signalWarning = false;
-            snooze = false;
           }
         }
+
+        // if badguy detected (signalWarning == true), AND snooze has not been set,
+        if (signalWarning && !snooze) {
+          USE_SERIAL.println("badguy found AND snooze NOT set");
+          blinkLight("on");
+          buzzer("on");
+        } else if ( !signalWarning){
+          USE_SERIAL.println("NO badguy found");
+          blinkLight("off");
+          buzzer("off");
+        }
+
+        // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+        if (digitalRead(buttonPin) == HIGH) {             // if snooze is pressed
+          USE_SERIAL.println("**** Button was pressed ***");
+          buzzer("off");                                  // turn off buzzer, turn off light
+          blinkLight("off");
+          snooze = true;
+        }
       }
-    }
-    else {
+    } else {
       //USE_SERIAL.printf(“%s”, http.errorToString(httpCode).c_str());
       //USE_SERIAL.printf("hello %s", http.errorToString(httpCode).c_str());
     }
@@ -119,14 +117,13 @@ void loop() {
 
 void blinkLight (String action) {
   if (action == "on") {
-    digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-    delay(1000);                      // Wait for a second
+//    digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+//    // but actually the LED is on; this is because
+//    // it is active low on the ESP-01)
+//    delay(1000);                      // Wait for a second
     digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-    delay(1000);
-  }
-  else {
+    //delay(1000);
+  } else {
     digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
   }
 }
