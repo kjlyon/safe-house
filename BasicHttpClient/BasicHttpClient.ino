@@ -32,7 +32,7 @@ bool snooze = false;
 bool signalWarning = false;
 
 // twilio info
-String to_number    = "+13608275213";
+String to_number    = "+14062350250";
 String from_number = "+13604642704";
 String message_body    = "Emergency Alert from Safe-House! Nicholas just connected to Jill's wifi.";
 // The 'authorized number' to text the ESP8266 for our example
@@ -132,6 +132,7 @@ void loop() {
           USE_SERIAL.println("**** Panic Button was pressed ***");
           buzzer("on");                                        // turn off buzzer, turn off light
           blinkLight("on");
+          signalWarning = true;
           USE_SERIAL.println("**** Send SMS message here ***");
           // Response will be filled with connection info and Twilio API responses
           // from this initial SMS send.
