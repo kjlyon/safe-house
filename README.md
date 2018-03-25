@@ -6,6 +6,7 @@ Safe lock your house. You deserve to feel safe in your own home. Know when someo
 
 ## Sustainable Issues
 ![global_goals_image](https://user-images.githubusercontent.com/21182867/37872215-98194308-2fb7-11e8-9b45-2269e519df34.png)
+
 One of the global sustainable development goals is gender equality. Part of gender equality is feeling safe.
 
 According to the [Center for Disease Control](https://www.cdc.gov/mmwr/volumes/66/wr/mm6628a1.htm) :
@@ -36,6 +37,7 @@ Functions:
 
 ## Future Visions for this Safe-House
 Shared at domestic violence shelters
+
 Add areas for development
 
 ## You can protect yourself with Safe-Home
