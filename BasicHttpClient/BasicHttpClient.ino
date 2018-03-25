@@ -9,6 +9,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
+#include "twilio.hpp"
 #include <string>
 #include "string"
 
@@ -18,7 +20,8 @@ ESP8266WiFiMulti WiFiMulti;
 
 
 // constants won't change. They're used here to set pin numbers:
-const int buttonPin = 12;             // the number of the pushbutton pin
+const int snoozeButtonPin = 12;             // the number of the pushbutton pin
+const int panicButtonPin = 13;
 const int buzzPin =  4;
 //const int ledPin =  13;             // the number of the LED pin
 const String badlist[2] = {"B6:A7:D8:G9:U0:Y1", "B5:A7:D2:G9:R1:L8"};
@@ -28,10 +31,26 @@ const int numberOfBadGuys = 2;
 bool snooze = false;
 bool signalWarning = false;
 
+// twilio info
+String to_number    = "+13608275213";
+String from_number = "+13604642704";
+String message_body    = "Emergency Alert from Safe-House! Nicholas just connected to Jill's wifi.";
+// The 'authorized number' to text the ESP8266 for our example
+String master_number    = "+13604642704";
+
+const char* account_sid = "AC20495aff9644ae11bc4051b4eea7e03b";
+const char* auth_token = "f8c8d698874b109f2c35cd2ee64a317e";
+const char* twilioFingerprint = "CF C4 40 77 88 75 5F BD 07 0F 88 3F 1C BD 95 3B DD AE 5F 13";
+String media_url = "";
+
+// Global twilio objects
+Twilio *twilio;
+ESP8266WebServer twilio_server(8000);
 
 void setup() {
   pinMode(buzzPin, OUTPUT);           // initialize the buzzer pin as an output
-  pinMode(buttonPin, INPUT);          // initialize the pushbutton pin as an input
+  pinMode(snoozeButtonPin, INPUT);    // initialize the snooze pushbutton pin as an input
+  pinMode(panicButtonPin, INPUT);     // initialize the panic pushbutton pin as an input
   pinMode(LED_BUILTIN, OUTPUT);       // Initialize the LED_BUILTIN pin as an output
   digitalWrite(LED_BUILTIN, LOW);
   USE_SERIAL.begin(115200);
@@ -54,6 +73,8 @@ void loop() {
 
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) { //waits until its connected
+    twilio = new Twilio(account_sid, auth_token, twilioFingerprint);
+
     HTTPClient http; // connects to it with http
     USE_SERIAL.print("[HTTP] begin...\n");
     // configure traged server and url
@@ -92,18 +113,37 @@ void loop() {
           USE_SERIAL.println("badguy found AND snooze NOT set");
           blinkLight("on");
           buzzer("on");
-        } else if ( !signalWarning){
+        } else if ( !signalWarning) {
           USE_SERIAL.println("NO badguy found");
           blinkLight("off");
           buzzer("off");
         }
 
-        // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-        if (digitalRead(buttonPin) == HIGH) {             // if snooze is pressed
-          USE_SERIAL.println("**** Button was pressed ***");
-          buzzer("off");                                  // turn off buzzer, turn off light
+        // check if the snooze button is pressed. If it is, the buttonState is HIGH:
+        if (digitalRead(snoozeButtonPin) == HIGH) {             // if snooze is pressed
+          USE_SERIAL.println("**** Snooze Button was pressed ***");
+          buzzer("off");                                        // turn off buzzer, turn off light
           blinkLight("off");
           snooze = true;
+        }
+
+        // check if the snooze button is pressed. If it is, the buttonState is HIGH:
+        if (digitalRead(panicButtonPin) == HIGH) {             // if panic is pressed
+          USE_SERIAL.println("**** Panic Button was pressed ***");
+          buzzer("on");                                        // turn off buzzer, turn off light
+          blinkLight("on");
+          USE_SERIAL.println("**** Send SMS message here ***");
+          // Response will be filled with connection info and Twilio API responses
+          // from this initial SMS send.
+          String response;
+          bool success = twilio->send_message(
+                           to_number,
+                           from_number,
+                           message_body,
+                           response,
+                           media_url
+                         );
+          USE_SERIAL.println(response);
         }
       }
     } else {
@@ -112,19 +152,14 @@ void loop() {
     }
     http.end();
   }
-  delay(4000);                        // how often we query the url
+  delay(500);                          // how often we query the url
 }
 
 void blinkLight (String action) {
   if (action == "on") {
-//    digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-//    // but actually the LED is on; this is because
-//    // it is active low on the ESP-01)
-//    delay(1000);                      // Wait for a second
-    digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-    //delay(1000);
+    digitalWrite(LED_BUILTIN, HIGH);    // Turn the LED off by making the voltage HIGH
   } else {
-    digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+    digitalWrite(LED_BUILTIN, LOW);     // Turn the LED on (Note that LOW is the voltage level
   }
 }
 
