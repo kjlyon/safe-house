@@ -22,7 +22,16 @@
 ESP8266WiFiMulti WiFiMulti;
 
 
+int buzzPin =  4;
 
+// constants won't change. They're used here to set pin numbers:
+const int buttonPin = 12;     // the number of the pushbutton pin
+//const int ledPin =  13;      // the number of the LED pin
+
+// variables will change:
+int buttonState = 0;         // variable for reading the pushbutton status
+
+bool snooze = false;
 
 
 bool signalWarning = false;
@@ -48,13 +57,20 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP("Puppet Guest", "argon4949");
 
+  pinMode(buzzPin, OUTPUT);
+
+  // initialize the LED pin as an output:
+
+  // initialize the pushbutton pin as an input:
+  pinMode(buttonPin, INPUT);
+
 
 
 }
 
 void loop() {
 
-
+  USE_SERIAL.println(snooze);
   String badlist[2] = {"B6:A7:D8:G9:U0:Y1", "B5:A7:D2:G9:R1:L8"};
   int numberOfBadGuys = 2;
   // wait for WiFi connection
@@ -90,24 +106,50 @@ void loop() {
 
         //if (signalWarning = false) {
         for (int i = 0; i < numberOfBadGuys; i++) {
-          
-            // if i in badlist
-            //then change a boolean to true
-            if (currentConnections.indexOf(badlist[i]) != -1) { //contains (currentConnections,(badList[i])
 
-              
-              
-              USE_SERIAL.println("something cool happen");
-              signalWarning = true;
-            
-              digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
-              // but actually the LED is on; this is because
-              // it is active low on the ESP-01)
-              delay(1000);                      // Wait for a second
-              digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
-              delay(1000);
+          // if i in badlist
+          //then change a boolean to true
+          if (currentConnections.indexOf(badlist[i]) != -1) { //contains (currentConnections,(badList[i])
+
+
+
+            USE_SERIAL.println("something cool happen");
+            signalWarning = true;
+
+            digitalWrite(LED_BUILTIN, LOW);   // Turn the LED on (Note that LOW is the voltage level
+            // but actually the LED is on; this is because
+            // it is active low on the ESP-01)
+            delay(1000);                      // Wait for a second
+            digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
+            delay(1000);
+
+            if (snooze == false) {
+              analogWrite(4, 512);
             }
-          
+
+
+
+            // read the state of the pushbutton value:
+            buttonState = digitalRead(buttonPin);
+
+
+
+            // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+            if (buttonState == HIGH) {
+              // turn LED on:
+              analogWrite(4, 0);
+              snooze = true;
+            }
+
+
+          }
+
+          else {
+            analogWrite(4, 0);
+            signalWarning = false;
+            snooze = false;
+
+          }
         }
         //}
 
@@ -137,7 +179,7 @@ void loop() {
 //    char len;
 //
 //    len = strlen(str);
-//    
+//
 //    if (strlen(sfind) > len) {
 //        return 0;
 //    }
